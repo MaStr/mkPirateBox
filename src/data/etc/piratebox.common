@@ -14,6 +14,7 @@ pb_swapimg="$pb_usbdir/OpenWRT.swap"
 pb_pb_srcImg="$pb_usbmount/piratebox*img.gz"
 pb_pbimg="$pb_usbdir/pbIMG.img"
 pb_pbmount="/opt/piratebox"
+pb_pythonipk="$pb_usbdir/python*ipk"
 
 
 #############################################################################
@@ -268,7 +269,7 @@ pb_mkpmimg () {
    pb_umount pb
    pb_mount usb
    [ -d "$(dirname $pb_pbimg)" ] || mkdir -p "$(dirname $pb_pbimg)"
-   tar xzfO "$pb_pb_srcImg" > "$pb_pbimg" 
+   gzip -dc  "$pb_pb_srcImg" > "$pb_pbimg" 
    pb_uciset fstab pirateimage mount \
         target=$pb_pbmount \
 	device=$pb_pbimg \
@@ -321,13 +322,19 @@ pb_update() {
   [ -e /var/lock/opkg.lock ] && \
     mv /var/lock/opkg.lock /var/lock/opkg.lock_
 
-  # install python to piratebox storage
-  if ! opkg update
-  then
-    echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
-    exit 5
+  #First check if python package located on usb-stick
+  if [ -e $pb_pythonipk ] 
+  then 
+     opkg -d piratebox install  "$pb_pythonipk" 
+  else
+    # install python to piratebox storage
+    if ! opkg update
+    then
+      echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
+      exit 5
+    fi
+    opkg -d piratebox install python
   fi
-  opkg -d piratebox install python
 
   # CAVE: ugly hack
   # in case we were called from the postinst, restore opkg lock
