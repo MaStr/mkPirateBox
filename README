@@ -4,6 +4,12 @@
 # (C) 2011, Christiane Ruetten, cr@23bit.net
 #
 # Released under GPLv2, see http://www.gnu.org/licenses/gpl-2.0.html
+#
+# Changed for using files from http://piratebox.aod-rpg.de 
+#    with this, it is reaching the possibility to serve a shoutbox
+
+
+#### <---- Still work in progress ---->
 
 FEATURES:
   - Install this IPKG on your fresh OpenWRT "Backfire", and out
