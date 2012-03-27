@@ -1,5 +1,5 @@
 NAME = piratebox
-VERSION = 0.3-0
+VERSION = 0.3-1
 VERSIONPS = 0.1-1
 ARCH = all
 IPK = $(NAME)_$(VERSION)_$(ARCH).ipk

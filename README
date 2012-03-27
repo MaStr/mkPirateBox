@@ -1,7 +1,8 @@
 ###########################################################################
-# mkPirateBox v0.2-5
+# mkPirateBox v0.3-1
 # IPKG that installs PirateBox to your fresh OpenWRT router
 # (C) 2011, Christiane Ruetten, cr@23bit.net
+#  Version >0.3  (C) 2012, Matthias Strubel matthias.strubel@aod-rpg.de
 #
 # Released under GPLv2, see http://www.gnu.org/licenses/gpl-2.0.html
 #
@@ -9,15 +10,15 @@
 #    with this, it is reaching the possibility to serve a shoutbox
 
 
-#### <---- Still work in progress ---->
 
 FEATURES:
   - Install this IPKG on your fresh OpenWRT "Backfire", and out
     comes (hopefully) a ready-to-use PirateBox, a project by NYU
     Professor David Darts.
   - Now supports devices with 4 MByte flash
-  - See https://github.com/cr/mkPirateBox/wiki for current
+  - See https://github.com/MaStr/mkPirateBox/wiki for current
     router support status.
+  - Shoutbox !
 
 TODO:
   - Test other platforms
@@ -36,14 +37,14 @@ PLEASE HELP:
   - Thanks! :)
 
 REQUIREMENTS:
-  - See https://github.com/cr/mkPirateBox/wiki/Requirements
-    and https://github.com/cr/mkPirateBox/wiki/Router-support
+  - See https://github.com/MaStr/mkPirateBox/wiki/Requirements
+    and https://github.com/MaStr/mkPirateBox/wiki/Router-support
 
 INSTALL:
-  - See https://github.com/cr/mkPirateBox/wiki/Installation
+  - See https://github.com/MaStr/mkPirateBox/wiki/Installation
 
 USAGE:
-  - See https://github.com/cr/mkPirateBox/wiki/Usage
+  - See https://github.com/MaStr/mkPirateBox/wiki/Usage
   
 
 REFERENCES:

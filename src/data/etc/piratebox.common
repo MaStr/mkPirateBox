@@ -11,7 +11,7 @@ pb_share="$pb_usbdir/Shared"
 pb_extimg="$pb_usbdir/OpenWRT.img"
 pb_extmount="/mnt/ext"
 pb_swapimg="$pb_usbdir/OpenWRT.swap"
-pb_pb_srcImg="$pb_usbmount/piratebox*img.gz"
+pb_pb_srcImg="$pb_usbmount/piratebox_img.gz"
 pb_pbimg="$pb_usbdir/pbIMG.img"
 pb_pbmount="/opt/piratebox"
 pb_pythonipk="$pb_usbdir/python*ipk"
@@ -75,7 +75,7 @@ pb_mount() {
           ;;
       pb) 
           pb_ismounted "$pb_pbmount" && continue
-	  pb_mount pb
+	  pb_mount usb
 	  [ -d "$pb_pbmount" ] || mkdir -p "$pb_pbmount"
 	  if ! mount -o loop,rw,sync "$pb_pbimg" "$pb_pbmount"
 	  then
@@ -99,7 +99,7 @@ pb_umount() {
     case $part in
       usb)
 	  pb_ismounted "$pb_usbmount" || continue
-          pb_umount swap ext
+          pb_umount swap ext pb
           if ! umount "$pb_usbmount"
           then
             echo "${initscript}: WARNING: unable to umount USB storage" >&2
@@ -135,6 +135,7 @@ pb_umount() {
 	     fi
 	  fi
 	  losetup -d /dev/loop1
+	  ;;
        swap)
           #TODO: error handling
           swapoff "$pb_swapimg" &>/dev/null
@@ -171,17 +172,22 @@ pb_netconfig() {
   echo "127.0.0.1 $pb_hostname localhost." >/etc/hosts
   echo "$pb_ip $pb_hostname" >>/etc/hosts
   uci set "network.lan.ipaddr=$pb_ip"
+  uci set "network.lan.proto=static"
   #CAVE: wireless config might be platform specific
   uci set "wireless.radio0.disabled=0"
   uci set "wireless.@wifi-iface[0].ssid=$pb_wireless_ssid"
 
-  # redirect all 80/tcp traffic to the PirateBox
-  pb_uciset firewall piratebox redirect \
-    src=lan \
-    proto=tcp \
-    src_dport=80 \
-    dest_ip=$pb_ip \
-    dest_port=80
+### MaStr Start
+#  Removed thie part, because maybe we want use another ports too
+#    or divide task between boxes!
+## redirect all 80/tcp traffic to the PirateBox
+#  pb_uciset firewall piratebox redirect \
+#    src=lan \
+#    proto=tcp \
+#    src_dport=80 \
+#    dest_ip=$pb_ip \
+#    dest_port=80
+# MaStr End
 
   # redirect all DNS requests to PirateBox IP
   pb_uciset dhcp piratebox domain \
@@ -192,6 +198,9 @@ pb_netconfig() {
   # patch dnsmasq start script to properly handle domain wildcards
   sed -i 's#^.*\${fqdn\%\.\*}\" ==.*$## ; s#^.*fqdn=\"\$fqdn.*$##' \
     /etc/init.d/dnsmasq
+
+  /etc/init.d/dnsmasq stop
+  /etc/init.d/dnsmasq disable
 
 }
 
@@ -265,7 +274,7 @@ pb_mkextimg() {
     enabled=1
 }
 
-pb_mkpmimg () {
+pb_mkpbimg () {
    pb_umount pb
    pb_mount usb
    [ -d "$(dirname $pb_pbimg)" ] || mkdir -p "$(dirname $pb_pbimg)"
@@ -273,6 +282,7 @@ pb_mkpmimg () {
    pb_uciset fstab pirateimage mount \
         target=$pb_pbmount \
 	device=$pb_pbimg \
+	options=loop \
 	enabled=1
 }
 
@@ -309,6 +319,7 @@ pb_init() {
   # fix for ext packages not installing to usr
   [ -d "$pb_extmount/usr/lib" ] || mkdir -p "$pb_extmount/usr/lib"
   ln -sf "$pb_extmount/usr/lib" "$pb_extmount/lib"
+
 }
 
 pb_update() {
@@ -325,9 +336,11 @@ pb_update() {
   #First check if python package located on usb-stick
   if [ -e $pb_pythonipk ] 
   then 
+     echo "Installing python from usb stick"
      opkg -d piratebox install  "$pb_pythonipk" 
   else
     # install python to piratebox storage
+    echo "Installing python from repository"
     if ! opkg update
     then
       echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
@@ -340,8 +353,17 @@ pb_update() {
   # in case we were called from the postinst, restore opkg lock
   [ -e /var/lock/opkg.lock_ ] && \
     mv /var/lock/opkg.lock_ /var/lock/opkg.lock
-  
+
+  ln -s /usr/local/bin/python /usr/bin/
 }
+
+#Removes current image file and overwrite it with new one
+pb_updatePBImage () { 
+    pb_umount pb  
+    rm "$pb_pbimg"
+    pb_mkpbimg 
+}
+
 
 pb_start() {
   pb_mount usb ext swap pb
@@ -349,6 +371,7 @@ pb_start() {
   export PATH=$PATH:/usr/local/bin
   export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 
+  mkdir -p $pb_share    
  #cd "$pb_share"
  # start-stop-daemon -S -x python \
  #   -p /var/run/${NAME}.droopy.pid \
@@ -360,12 +383,12 @@ pb_start() {
  #   -p /var/run/${NAME}.simple.pid \
  #   -c nobody:nogroup -m -b -- \
  #   -m SimpleHTTPServer 8001
-  "$pb_pbmount/init.d/piratebox_router start"
+  $pb_pbmount/init.d/piratebox_router start
 }
 
 pb_stop() {
   # killing all piratebox processes
-  "$pb_pbmount/init.d/piratebox_router stop"
+  $pb_pbmount/init.d/piratebox_router stop
 
   sleep 3
   pb_umount usb
