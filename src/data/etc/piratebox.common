@@ -14,7 +14,9 @@ pb_swapimg="$pb_usbdir/OpenWRT.swap"
 pb_pb_srcImg="$pb_usbmount/piratebox_img.gz"
 pb_pbimg="$pb_usbdir/pbIMG.img"
 pb_pbmount="/opt/piratebox"
-pb_pythonipk="$pb_usbdir/python*ipk"
+pb_pythonipk="$pb_usbmount/python_*"
+pb_python_mini_ipk="$pb_usbmount/python-mini_*"
+pb_python_pre_libffi="$pb_usbmount/libffi_*"
 # Backup Url for downloading Image
 pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_img.gz"
 
@@ -343,17 +345,24 @@ pb_update() {
   [ -e /var/lock/opkg.lock ] && \
     mv /var/lock/opkg.lock /var/lock/opkg.lock_
 
-  #First check if python package located on usb-stick
-  if [ -e $pb_pythonipk ] 
-  then 
+# install python to piratebox storage
+  if [  -e $pb_python_pre_libffi ] && \
+     [  -e $pb_pythonipk ]  &&  \
+     [  -e $pb_python_mini_ipk ] ; then
+
+     echo "Installing libffi from usb stick"
+     opkg -d piratebox install $pb_python_pre_libffi
      echo "Installing python from usb stick"
-     opkg -d piratebox install  "$pb_pythonipk" 
-  else
-    # install python to piratebox storage
+     opkg -d piratebox install $pb_python_mini_ipk
+     echo "Installing python from usb stick"
+     opkg -d piratebox install $pb_pythonipk
+  else     
     echo "Installing python from repository"
     if ! opkg update
     then
       echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
+      echo "${initscript}: ERROR: If you want an offline install you need the following ipk files" >&2
+      echo "${initscript}: ERROR:   libffi pythonipk  python_mini " >&2
       exit 5
     fi
     opkg -d piratebox install python
