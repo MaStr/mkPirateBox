@@ -2,9 +2,16 @@
 
 . /etc/piratebox.common
 
-/etc/init.d/luci_fixtime enable
-/etc/init.d/luci_dhcp_migrate enable
-/etc/init.d/uhttpd enable
+if [ -e /etc/init.d/luci_fixtime  ] ; then
+   /etc/init.d/luci_fixtime enable
+fi
+if [ -e /etc/init.d/luci_dhcp_migrate ] ; then
+   /etc/init.d/luci_dhcp_migrate enable
+fi
+if [ -e /etc/init.d/uhttpd ] ; then
+   /etc/init.d/uhttpd enable
+fi
+
 /etc/init.d/piratebox disable
 
 /etc/init.d/piratebox stop

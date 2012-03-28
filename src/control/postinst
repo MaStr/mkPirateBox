@@ -18,12 +18,24 @@ then
 fi
 
 # disable web interface, start PirateBox instead
-/etc/init.d/uhttpd stop
-/etc/init.d/uhttpd disable
-/etc/init.d/luci_fixtime stop
-/etc/init.d/luci_fixtime disable
-/etc/init.d/luci_dhcp_migrate stop
-/etc/init.d/luci_dhcp_migrate disable
+# Only disable if installed!
+if [ -e /etc/init.d/uhttpd ] ; then 
+   echo "Stopping uttpd and disable it"
+   /etc/init.d/uhttpd stop
+   /etc/init.d/uhttpd disable
+fi
+
+if [ -e /etc/init.d/luci_fixtime ] ; then
+  echo "Stopping luci_fixtime and disable it"
+  /etc/init.d/luci_fixtime stop
+  /etc/init.d/luci_fixtime disable
+fi
+
+if [ -e /etc/init.d/luci_dhcp_migrate ] ; then
+  /etc/init.d/luci_dhcp_migrate stop
+  /etc/init.d/luci_dhcp_migrate disable
+fi
+
 /etc/init.d/piratebox enable
 
 # configure USB, network
