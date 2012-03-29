@@ -361,8 +361,8 @@ pb_update() {
     if ! opkg update
     then
       echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
-      echo "${initscript}: ERROR: If you want an offline install you need the following ipk files" >&2
-      echo "${initscript}: ERROR:   libffi pythonipk  python_mini " >&2
+      echo "${initscript}: INFO: If you want an offline install you need the following ipk files" >&2
+      echo "${initscript}: INFO:   libffi pythonipk  python_mini " >&2
       exit 5
     fi
     opkg -d piratebox install python
