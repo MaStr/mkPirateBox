@@ -1,3 +1,16 @@
+##########################################################################
+# PirateBox-Manager ReadMe
+##########################################################################
+# PirateBox-Manager v0.6.1
+# A simple PirateBox Installer / Manager for Laptop users
+# (C) 2012, Cale Black cablack@rams.colostate.edu
+# 
+# Released under GPLv2, see http://www.gnu.org/licenses/gpl-2.0.html
+#
+
+
+###########################################################################
+# Original mkPirateBox ReadMe
 ###########################################################################
 # mkPirateBox v0.3-1
 # IPKG that installs PirateBox to your fresh OpenWRT router
