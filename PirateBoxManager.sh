@@ -21,14 +21,9 @@
 # Credit for the wonderful scripts goes to Matthias Strubel
 #  
 ###########################################################################################################################
-###########Version 0.6.1###################################################################################################
-#Deleted the annoying piratebox comment on the download version
-#Cleaned up code and descripors
-#Added Devel Comments
-#Addressed not being able to access piratebox.lan
-#Cleaner Execution
-#Changed text editor to Nano for begginer users (sorry VI lovers)
-#Tested on a LiveCD / LiveUSB / LiveSD of Ubuntu 10.04 and 10.10 (working on persistance)
+###########Version 0.6.9###################################################################################################
+# Fixed a bug that wouldn't allow you to view download folder or chat
+# In version b got rid of the sudo su that caused a loop
 ###########################################################################################################################
 PS3='Please enter your choice: '
 options=("Quick install for Debian based systems" "Start PirateBox" "Stop PirateBox" "Just Download the Scripts" "Edit piratebox.conf" "Edit hostapd.conf (SSID, Channel, Driver, etc)" "Quit")
@@ -40,22 +35,22 @@ do
 "Quick install for Debian based systems")
 sudo wget -P /tmp/ http://piratebox.aod-rpg.de/dokuwiki/lib/exe/fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
 cd /tmp/
-sudo cp -i fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz piratebox-0.3.3-scripts-1.9.tar.gz
-sudo rm fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
-sudo tar xzvf piratebox*.tar.gz
+cp -i fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz piratebox-0.3.3-scripts-1.9.tar.gz
+rm fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
+tar xzvf piratebox*.tar.gz
 cd /tmp/piratebox
-sudo cp -rv piratebox /opt
-sudo ln -s /opt/piratebox/init.d/piratebox /etc/init.d/piratebox
+cp -rv piratebox /opt
+ln -s /opt/piratebox/init.d/piratebox /etc/init.d/piratebox
 rm /opt/piratebox/share & ln -s /mountpoint /opt/piratebox/share 
-sudo chmod 777 /opt/piratebox/chat/cgi-bin/data.pso
+chmod 777 /opt/piratebox/chat/cgi-bin/data.pso
 # Add these to lines to /etc/hosts
-# Use ed?
-#192.168.77.1  piratebox.lan
-#192.168.77.1  piratebox
-sudo service network-manager stop
-sudo killall dhclient
-sudo killall dnsmasq
-sudo /etc/init.d/piratebox start
+#sudo sed "192.168.77.1  piratebox.lan i\ 192.168.77.1  piratebox" > /etc/hosts
+echo "192.168.77.1  piratebox.lan">>/etc/hosts
+echo "192.168.77.1  piratebox">>/etc/hosts
+service network-manager stop
+killall dhclient
+killall dnsmasq
+/etc/init.d/piratebox start
 echo ""
 echo "1) Quick install for Debian based systems"
 echo "2) Start PirateBox"
@@ -68,7 +63,7 @@ echo "7) Quit"
 ;;
 
 "Start PirateBox")
-sudo /etc/init.d/piratebox start
+/etc/init.d/piratebox start
 echo ""
 echo "1) Quick install for Debian based systems"
 echo "2) Start PirateBox"
@@ -80,8 +75,8 @@ echo "7) Quit"
 ;;
 
 "Stop PirateBox")
-sudo /etc/init.d/piratebox stop
-sudo service network-manager start
+/etc/init.d/piratebox stop
+service network-manager start
 echo ""
 echo "1) Quick install for Debian based systems"
 echo "2) Start PirateBox"
@@ -93,10 +88,10 @@ echo "7) Quit"
 ;;
 
 "Just Download the Scripts")
-sudo wget -P /tmp/ http://piratebox.aod-rpg.de/dokuwiki/lib/exe/fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
+wget -P /tmp/ http://piratebox.aod-rpg.de/dokuwiki/lib/exe/fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
 cd /tmp/
-sudo cp -i fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz piratebox-0.3.3-scripts-1.9.tar.gz
-sudo rm fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
+cp -i fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz piratebox-0.3.3-scripts-1.9.tar.gz
+rm fetch.php?media=piratebox-0.3.3-scripts-1.9.tar.gz
 echo ""
 echo "Files saved in /tmp"
 echo ""
