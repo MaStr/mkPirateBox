@@ -62,4 +62,5 @@ echo "PirateBox shared directory: $pb_share"
 echo
 echo "Setup complete, PirateBox started."
 echo "You can remove the WAN connection now."
-
+echo "Please reboot your PirateBox now: "
+echo "   # reboot "
