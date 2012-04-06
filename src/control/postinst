@@ -47,7 +47,7 @@ fi
 
 # activate config changes
 /etc/init.d/firewall restart
-/etc/init.d/dnsmasq restart
+/etc/init.d/dnsmasq stop
 wifi
 
 # start PirateBox service
