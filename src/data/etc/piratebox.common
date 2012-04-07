@@ -11,14 +11,14 @@ pb_share="$pb_usbdir/Shared"
 pb_extimg="$pb_usbdir/OpenWRT.img"
 pb_extmount="/mnt/ext"
 pb_swapimg="$pb_usbdir/OpenWRT.swap"
-pb_pb_srcImg="$pb_usbmount/piratebox_img.gz"
+pb_pb_srcImg="$pb_usbmount/piratebox_img.tar.gz"
 pb_pbimg="$pb_usbdir/pbIMG.img"
 pb_pbmount="/opt/piratebox"
 pb_pythonipk="$pb_usbmount/python_*"
 pb_python_mini_ipk="$pb_usbmount/python-mini_*"
 pb_python_pre_libffi="$pb_usbmount/libffi_*"
 # Backup Url for downloading Image
-pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_img.gz"
+pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_img.tar.gz"
 
 
 #############################################################################
@@ -290,7 +290,8 @@ pb_mkpbimg () {
 	 exit 5
       fi
    fi
-   gzip -dc  "$pb_pb_srcImg" > "$pb_pbimg" 
+   #gzip -dc  "$pb_pb_srcImg" > "$pb_pbimg" 
+   tar xzO -f "$pb_pb_srcImg" > "$pb_pbimg" 
    pb_uciset fstab pirateimage mount \
         target=$pb_pbmount \
 	device=$pb_pbimg \
