@@ -378,11 +378,16 @@ pb_update() {
 }
 
 #Removes current image file and overwrite it with new one
-pb_updatePBImage () { 
+pb_updatePBImage () {
+    echo "Unmounting $pb_pbmount"
     pb_umount pb  
+    echo "Mount usb"
     pb_mount usb
+    echo "Removing old image file"
     rm  $pb_pbimg
+    echo "Create new Image file"
     pb_mkpbimg 
+    echo "Done"
 }
 
 
