@@ -3,7 +3,7 @@
 NAME=piratebox
 START=80
 STOP=20
-EXTRA_COMMANDS="setup init update nodns updatePB"
+EXTRA_COMMANDS="setup init update nodns updatePB mountPB"
 EXTRA_HELP="	setup	Activate current USB and network configuration
 	init	Mount USB, and PirateBoxify a fresh USB disk
 	update	  Update PirateBox files on USB disk (and refresh packages)
