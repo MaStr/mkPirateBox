@@ -103,7 +103,7 @@ pb_umount() {
     case $part in
       usb)
 	  pb_ismounted "$pb_usbmount" || continue
-          pb_umount swap ext pb
+          pb_umount swap pb ext
           if ! umount "$pb_usbmount"
           then
             echo "${initscript}: WARNING: unable to umount USB storage" >&2
@@ -380,7 +380,8 @@ pb_update() {
 #Removes current image file and overwrite it with new one
 pb_updatePBImage () { 
     pb_umount pb  
-    rm "$pb_pbimg"
+    pb_mount usb
+    rm  $pb_pbimg
     pb_mkpbimg 
 }
 
