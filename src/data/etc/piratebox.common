@@ -361,6 +361,10 @@ pb_update() {
     mv /var/lock/opkg.lock_ /var/lock/opkg.lock
 
   ln -s /usr/local/bin/python /usr/bin/
+
+  # LIGHTTPD Stuff
+  ln -s /usr/local/sbin/lighttpd  lighttpd 
+  ln -s /usr/local/lib/lighttpd  /usr/lib/lighttpd 
 }
 
 #Removes current image file and overwrite it with new one
