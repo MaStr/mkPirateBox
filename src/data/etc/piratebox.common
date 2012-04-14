@@ -11,14 +11,11 @@ pb_share="$pb_usbdir/Shared"
 pb_extimg="$pb_usbdir/OpenWRT.img"
 pb_extmount="/mnt/ext"
 pb_swapimg="$pb_usbdir/OpenWRT.swap"
-pb_pb_srcImg="$pb_usbmount/piratebox_img.tar.gz"
-pb_pbimg="$pb_usbdir/pbIMG.img"
+pb_pb_srcImg="$pb_usbmount/piratebox_ws_img.tar.gz"
+pb_pbimg="$pb_usbdir/pbIMG_ws.img"
 pb_pbmount="/opt/piratebox"
-pb_pythonipk="$pb_usbmount/python_*"
-pb_python_mini_ipk="$pb_usbmount/python-mini_*"
-pb_python_pre_libffi="$pb_usbmount/libffi_*"
 # Backup Url for downloading Image
-pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_img.tar.gz"
+pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_ws_img.tar.gz"
 
 
 #############################################################################
@@ -346,27 +343,16 @@ pb_update() {
   [ -e /var/lock/opkg.lock ] && \
     mv /var/lock/opkg.lock /var/lock/opkg.lock_
 
-# install python to piratebox storage
-  if [  -e $pb_python_pre_libffi ] && \
-     [  -e $pb_pythonipk ]  &&  \
-     [  -e $pb_python_mini_ipk ] ; then
-
-     echo "Installing libffi from usb stick"
-     opkg -d piratebox install $pb_python_pre_libffi
-     echo "Installing python from usb stick"
-     opkg -d piratebox install $pb_python_mini_ipk
-     echo "Installing python from usb stick"
-     opkg -d piratebox install $pb_pythonipk
-  else     
-    echo "Installing python from repository"
-    if ! opkg update
-    then
+  echo "Installing python from repository"
+  if ! opkg update
+  then
       echo "${initscript}: ERROR: No Internet connection on WAN port" >&2
-      echo "${initscript}: INFO: If you want an offline install you need the following ipk files" >&2
-      echo "${initscript}: INFO:   libffi pythonipk  python_mini " >&2
       exit 5
-    fi
+  else
     opkg -d piratebox install python
+    opkg -d piratebox install lighttpd
+    opkg -d piratebox install lighttpd-mod-cgi
+    opkg -d piratebox install lighttpd-mod-redirect
   fi
 
   # CAVE: ugly hack
