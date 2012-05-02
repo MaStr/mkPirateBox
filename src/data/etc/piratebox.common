@@ -58,7 +58,7 @@ pb_mount() {
       usb)
 	  pb_ismounted "$pb_usbmount" && continue
 	  [ -d "$pb_usbmount" ] || mkdir -p "$pb_usbmount"
-          if ! mount "$pb_usbdevice" "$pb_usbmount"
+          if ! mount -o umask=0,noatime,rw "$pb_usbdevice" "$pb_usbmount"
           then
             echo "${initscript}: ERROR: unable to mount USB storage" >&2
             exit 5
@@ -212,7 +212,7 @@ pb_usbconfig() {
     target=$pb_usbmount \
     device=$pb_usbdevice \
     fstype=vfat \
-    options=rw,sync \
+    options=rw,sync,umask=0 \
     enabled_fsck=0 \
     enabled=1
 
