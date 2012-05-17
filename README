@@ -18,7 +18,7 @@ FEATURES:
   - Now supports devices with 4 MByte flash
   - See https://github.com/MaStr/mkPirateBox/wiki for current
     router support status.
-  - Shoutbox !
+  - Runs with lighttpd Webserver
 
 TODO:
   - Test other platforms
