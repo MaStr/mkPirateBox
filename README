@@ -10,6 +10,7 @@
 #    with this, it is reaching the possibility to serve a shoutbox
 
 
+The OpenWRT-Packages can be found under "Downloads": https://github.com/MaStr/mkPirateBox/downloads 
 
 FEATURES:
   - Install this IPKG on your fresh OpenWRT "Backfire", and out
