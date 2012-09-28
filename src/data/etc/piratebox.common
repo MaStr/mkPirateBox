@@ -343,6 +343,9 @@ pb_update() {
   [ -e /var/lock/opkg.lock ] && \
     mv /var/lock/opkg.lock /var/lock/opkg.lock_
 
+  echo "Check for WAN Connection .."
+  ping google.com || echo "${initscript}: ERROR: no WAN connection" && exit 99
+
   echo "Installing python from repository"
   if ! opkg update
   then
@@ -391,17 +394,6 @@ pb_start() {
   export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 
   mkdir -p $pb_share    
- #cd "$pb_share"
- # start-stop-daemon -S -x python \
- #   -p /var/run/${NAME}.droopy.pid \
- #   -m -b -- \
- #   /usr/local/bin/droopy \
- #   -p "$pb_share/piratebox-logo.png" \
- #   -d "$pb_share" -m "$html"
- # start-stop-daemon -S -x python \
- #   -p /var/run/${NAME}.simple.pid \
- #   -c nobody:nogroup -m -b -- \
- #   -m SimpleHTTPServer 8001
   $pb_pbmount/init.d/piratebox_router start
 }
 
