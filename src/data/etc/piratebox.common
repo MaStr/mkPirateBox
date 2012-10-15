@@ -365,7 +365,7 @@ pb_update() {
     mv /var/lock/opkg.lock /var/lock/opkg.lock_
 
   echo "Check for WAN Connection .."
-  ping google.com || echo "${initscript}: ERROR: no WAN connection" && exit 99
+  ping -c 3 google.com || ( echo "${initscript}: ERROR: no WAN connection" && exit 99 )
 
   echo "Installing python from repository"
   if ! opkg update
