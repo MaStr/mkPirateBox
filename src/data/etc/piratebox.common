@@ -392,6 +392,8 @@ pb_update() {
   ln -s /usr/local/lib/lighttpd  /usr/lib/lighttpd 
 
 #  /etc/init.d/lighttpd disable
+#
+  exit 0
 }
 
 #Removes current image file and overwrite it with new one
