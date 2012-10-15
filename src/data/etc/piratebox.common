@@ -174,7 +174,7 @@ pb_uciset() {
 #   is used if the piratebox is running in mesh
 #---------------------------------------------------------
 pb_generateHostname() {
-  local suffix=$((`</dev/urandom tr -dc a-zA-Z1-9 | head -c8`))
+  local suffix=`</dev/urandom tr -dc a-zA-Z1-9 | head -c8`
   pb_random_hostname="$suffix.$pb_hostname"
 }
 

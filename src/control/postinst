@@ -56,7 +56,7 @@ wifi
 # give some user feedback
 echo
 echo "PirateBox wireless SSID: $pb_wireless_ssid"
-echo "PirateBox DNS and hostname: $pb_hostname"
+echo "PirateBox DNS and hostname: $pb_random_hostname"
 echo "PirateBox LAN IP address: $pb_ip"
 echo "PirateBox shared directory: $pb_share"
 echo
