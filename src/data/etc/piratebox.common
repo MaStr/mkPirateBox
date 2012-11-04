@@ -378,6 +378,8 @@ pb_update() {
     opkg -d piratebox install lighttpd-mod-cgi
     opkg -d piratebox install lighttpd-mod-redirect
     opkg -d piratebox install lighttpd-mod-alias
+    #Maybe useful
+    opkg -d piratebox install lighttpd-mod-setenv
   fi
 
   # CAVE: ugly hack
