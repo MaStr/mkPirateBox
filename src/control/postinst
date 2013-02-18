@@ -38,6 +38,12 @@ fi
 
 /etc/init.d/piratebox enable
 
+#Disable Piratebox, it it seems that it is installed
+if [ -d /opt/piratebox ] ; then
+   /etc/init.d/piratebox stop
+fi
+
+
 # configure USB, network
 /etc/init.d/piratebox setup
 

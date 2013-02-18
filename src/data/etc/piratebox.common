@@ -277,7 +277,33 @@ pb_mkswap() {
 pb_needextimg() {
   # [ ! -e "$pb_extimg" ]
   # always re-create ext image because of opkg woes
-  true
+
+  if [ -e $pb_extimg ] ; then
+      echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+      echo "@@              Caution                   @@"
+      echo "@@  It seems there is already the file    @@"
+      echo "@@  $pb_extimg "
+      echo "@@  on your USB Stick                     @@"
+      echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+      echo " "
+      echo " This can happen, if you installed a new "
+      echo "  firmware on your router, or if you did  "
+      echo "  an upgrade of  the PirateBox  package.  "
+      echo " "
+      echo "  If you are upgrading the package, "
+      echo "       DO NOT overwrite the file!"
+      echo " "
+      echo " Do you want to reinitiate your USB and "
+      echo " overwrite the file? ( y / n) "
+      read answer
+
+      if [ "$answer" = "n" ]  ; then
+        echo "${initscript}: Skipping further USB prepare-steps"
+        return false
+      fi
+  fi
+
+  return true
 }
 
 pb_mkextimg() {
@@ -323,6 +349,7 @@ pb_init() {
   pb_mount usb
   [ -d "$pb_usbdir" ] || mkdir -p "$pb_usbdir"
 
+
   if pb_needswap
   then
     echo "${initscript}: Creating swapspace..."
@@ -345,11 +372,11 @@ pb_init() {
     || echo "dest piratebox $pb_extmount" >>/etc/opkg.conf
 
   # link ext usr to /usr/local
-  ln -sf "$pb_extmount/usr" /usr/local
+  [ -L  /usr/local ] || ln -sf "$pb_extmount/usr" /usr/local
 
   # fix for ext packages not installing to usr
   [ -d "$pb_extmount/usr/lib" ] || mkdir -p "$pb_extmount/usr/lib"
-  ln -sf "$pb_extmount/usr/lib" "$pb_extmount/lib"
+  [ -L  "$pb_extmount/lib" ] || ln -sf "$pb_extmount/usr/lib" "$pb_extmount/lib"
 
 }
 
