@@ -1,0 +1,4 @@
+#!/bin/ash
+
+/etc/init.d/ext_mnt deinstall
+
