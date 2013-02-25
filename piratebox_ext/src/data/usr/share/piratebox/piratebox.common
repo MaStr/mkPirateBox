@@ -1,0 +1,215 @@
+#############################################################################
+# PirateBox helper functions
+
+#load ext_mnt config
+
+. /etc/ext_mnt.config
+
+
+pb_setup() {
+
+
+  pb_netconfig 
+  
+### needs to be done until there are extra packages which do this stuff in their postinst section
+  ln -s /usr/local/bin/python /usr/bin/
+  # LIGHTTPD Stuff
+  ln -s /usr/local/sbin/lighttpd  /usr/sbin/lighttpd 
+  ln -s /usr/local/lib/lighttpd  /usr/lib/lighttpd 
+
+}
+
+pb_nodns() {
+  # disable local DNS per dnsmasq
+  cp /tmp/resolv.conf.auto /tmp/resolv.conf
+}
+
+
+pb_ismounted() {
+  mount | grep "on $1 " >/dev/null
+}
+
+pb_mount() {
+  parts=$*
+  [ "$parts" == "-a" ] && parts="pb"
+  for part in $*
+  do
+    case $part in
+      pb) 
+          pb_ismounted "$pb_pbmount" && continue
+	  pb_mount usb
+	  [ -d "$pb_pbmount" ] || mkdir -p "$pb_pbmount"
+	  if ! mount -o loop,rw,sync "$pb_pbimg" "$pb_pbmount"
+	  then
+	    echo "${initscript}: ERROR: unable to mount piratebox image" >&2
+	    exit 5
+	  fi
+	  ;;
+    esac
+  done
+}
+
+pb_umount() {
+  parts=$*
+  [ "$parts" == "-a" ] && parts="pb"
+  for part in $*
+  do
+    case $part in
+      pb)
+          losetup -d /dev/loop1 &>/dev/null
+	  pb_ismounted "$pb_pbmount" || continue
+	  if ! umount "$pb_pbmount"
+	  then 
+	     pb_stop &>/dev/null
+	     sleep 2
+	      if ! umount "$pb_pbmount"
+	      then
+	        echo "${initscript}: WARNING: unable to umount piratebox image" >&2
+	     fi
+	  fi
+	  losetup -d /dev/loop1
+	  ;;
+    esac
+  done
+}
+
+pb_uciadd() {
+  local config=$1 ; shift
+  local section=$1 ; shift
+  local type=$1 ; shift
+  [ -e "/etc/config/$config" ] || touch "/etc/config/$config"
+  uci show "$config.$section" &>/dev/null \
+    || uci add "$config $section" &>/dev/null
+  uci set "$config.$section=$type"
+}
+
+
+#---------------------------------------------------------
+# Generates a random suffix for PirateBox domain names
+#   is used if the piratebox is running in mesh
+#---------------------------------------------------------
+pb_generateHostname() {
+  local suffix=`</dev/urandom tr -dc a-zA-Z1-9 | head -c8`
+  pb_random_hostname="$suffix.$pb_hostname"
+}
+
+
+ # reconfigure network
+pb_netconfig() {
+  
+  work_hostname="$pb_hostname"
+  if [  -e $pb_inst_flag_mesh ] ; then
+       echo "Mesh package detected, generating random hostname"
+       pb_generateHostname    
+       work_hostname="$pb_random_hostname"
+  fi
+ 
+  
+  #Use random Stuff for systems hostname
+  uci set "system.@system[0].hostname=$work_hostname"
+
+  # Add piratebox.lan
+  echo "127.0.0.1 $pb_hostname localhost." >/etc/hosts
+  echo "$pb_ip $pb_hostname" >>/etc/hosts
+  
+  if [  "$pb_hostname" = "$work_hostname" ] ; then
+     #Add Random stuff
+     echo "127.0.0.1 $pb_random_hostname ." >>/etc/hosts
+     echo "$pb_ip $pb_random_hostname" >>/etc/hosts
+   fi 
+
+  uci set "network.lan.ipaddr=$pb_ip"
+  uci set "network.lan.ipaddr=$pb_ip"
+  uci set "network.lan.proto=static"
+  #CAVE: wireless config might be platform specific
+  uci set "wireless.radio0.disabled=0"
+  uci set "wireless.@wifi-iface[0].ssid=$pb_wireless_ssid"
+  uci commit
+   
+   # activate config changes
+   /etc/init.d/firewall restart
+   wifi
+
+}
+
+
+pb_undoconfig() {
+  # undo config changes
+  uci delete dhcp.piratebox
+  uci delete firewall.piratebox
+  uci delete fstab.piratebox
+  uci delete fstab.pirateswap
+  uci delete fstab.pirateimage
+  uci set "system.@system[0].hostname=OpenWRT"
+  uci set "network.lan.ipaddr=192.168.1.1"
+  uci commit
+  cp /rom/etc/opkg.conf /etc/
+  cp /rom/etc/hosts /etc/
+  cp /rom/etc/init.d/dnsmasq /etc/init.d/
+  rm /usr/local
+  [ -d "$pb_usbmount" ] && rmdir "$pb_usbmount"
+  [ -d "$pb_extmount" ] && rmdir "$pb_extmount"
+  [ -d "$pb_pbmount"  ] && rmdir "$pb_pbmount"
+}
+
+
+pb_mkpbimg () {
+   pb_umount pb
+   pb_mount usb
+   [ -d "$(dirname $pb_pbimg)" ] || mkdir -p "$(dirname $pb_pbimg)"
+   if [ ! -e $pb_pb_srcImg ] ; then
+      echo "No PirateBox Image file found... loading from Internet"
+      wget -O $pb_pb_srcImg  $pb_pb_srcImg_url 
+      if [ ! -e $pb_pb_srcImg ] ; then
+         echo "wget failed... cancel"
+	 exit 5
+      fi
+   fi
+   #gzip -dc  "$pb_pb_srcImg" > "$pb_pbimg" 
+   tar xzO -f "$pb_pb_srcImg" > "$pb_pbimg" 
+   pb_uciset fstab pirateimage mount \
+        target=$pb_pbmount \
+	device=$pb_pbimg \
+	options=loop \
+	enabled=1
+}
+
+pb_init() {
+
+  echo "${initscript}: Creating piratebox loop image..."
+  pb_mkpbimg
+ 
+}
+
+
+#Removes current image file and overwrite it with new one
+pb_updatePBImage () {
+    echo "Unmounting $pb_pbmount"
+    pb_umount pb  
+    echo "Mount usb"
+    pb_mount usb
+    echo "Removing old image file"
+    rm  $pb_pbimg
+    echo "Create new Image file"
+    pb_mkpbimg 
+    echo "Done"
+}
+
+
+pb_start() {
+  pb_mount pb
+
+  export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
+
+  mkdir -p $pb_share    
+  $pb_pbmount/init.d/piratebox_router start
+}
+
+pb_stop() {
+  # killing all piratebox processes
+  $pb_pbmount/init.d/piratebox_router stop
+
+  sleep 3
+  pb_umount pb
+}
+

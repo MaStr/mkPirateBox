@@ -218,7 +218,7 @@ ext_fix_path() {
 
     echo "Including the external mountpoint to system"
     # link ext usr to /usr/local
-  [ -L  /usr/local ] || ln -sf "$pb_extmount/usr" /usr/local
+  [ -L  $ext_linktarget ] || ln -sf "$pb_extmount/usr" $ext_linktarget
 
   # fix for ext packages not installing to usr
   [ -d "$pb_extmount/usr/lib" ] || mkdir -p "$pb_extmount/usr/lib"
@@ -228,8 +228,9 @@ ext_fix_path() {
    # But only it isn't already there
    grep "ENH_PATH"  >> /dev/null
    if [ "$?" = "1" ]  ; then
-      echo 'ENH_PATH="/usr/local/bin:/usr/local/sbin//usr/local/usr/bin:/usr/local/usr/sbin"' >> /etc/profile
-      echo 'PATH="$PATH:$ENH_PATH" >> /etc/profile
+
+      echo \"ENH_PATH="$ext_linktarget/bin:$ext_linktarget/sbin/;$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
+      echo "PATH=\"$PATH:$ENH_PATH\"" >> /etc/profile
     fi
    
    #TODO enhance ldconfig path

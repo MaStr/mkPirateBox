@@ -1,0 +1,77 @@
+#!/bin/ash
+
+# load ext_mnt config
+. /etc/ext_mnt.config
+
+##------ Preparerations for /mnt/ext dependencies
+if [ ! -e /etc/init.d/piratebox ] ; then
+   ln  /usr/local/etc/init.d/piratebox /etc/init.d/ 
+fi
+
+# include PirateBox shared functionality
+. /usr/local/usr/share/piratebox/piratebox.common
+
+
+
+# disable web interface, start PirateBox instead
+# Only disable if installed!
+if [ -e /etc/init.d/uhttpd ] ; then 
+   echo "Stopping uttpd and disable it"
+   /etc/init.d/uhttpd stop
+   /etc/init.d/uhttpd disable
+fi
+
+if [ -e /etc/init.d/luci_fixtime ] ; then
+  echo "Stopping luci_fixtime and disable it"
+  /etc/init.d/luci_fixtime stop
+  /etc/init.d/luci_fixtime disable
+fi
+
+if [ -e /etc/init.d/luci_dhcp_migrate ] ; then
+  /etc/init.d/luci_dhcp_migrate stop
+  /etc/init.d/luci_dhcp_migrate disable
+fi
+
+if [ -e /etc/init.d/dnsmasq ] ; then
+   /etc/init.d/dnsmasq stop
+   /etc/init.d/dnsmasq disable
+fi
+
+
+#Disable Piratebox, it it seems that it is installed
+if [ -d /opt/piratebox ] ; then
+   /etc/init.d/piratebox stop
+fi
+
+##only do network config etc, when first install
+setup_run=0
+if [ ! -e  $pb_inst_done ]  ; then
+    # configure USB, network
+     /etc/init.d/piratebox setup
+     setup_run=1
+fi
+
+
+# prepare USB partition and install PirateBox
+/etc/init.d/piratebox init
+/etc/init.d/piratebox update
+
+
+# start PirateBox service
+/etc/init.d/piratebox start
+
+if [ $setup_run ] ; then
+   # give some user feedback
+   echo
+   echo "PirateBox wireless SSID: $pb_wireless_ssid"
+   echo "PirateBox DNS and hostname: $pb_hostname"
+   echo "  hostname with unique suffix is: "  `uci get system.@system[0].hostname`
+   echo "PirateBox LAN IP address: $pb_ip"
+   echo "PirateBox shared directory: $pb_share"
+   echo
+   echo "Setup complete, PirateBox started."
+   echo "You can remove the WAN connection now."
+   echo "Please reboot your PirateBox now: "
+   echo "   # reboot "
+fi
+echo "Done
