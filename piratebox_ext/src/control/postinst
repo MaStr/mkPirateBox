@@ -3,6 +3,8 @@
 # load ext_mnt config
 . /etc/ext_mnt.config
 
+
+
 ##------ Preparerations for /mnt/ext dependencies
 if [ ! -e /etc/init.d/piratebox ] ; then
    ln  /usr/local/etc/init.d/piratebox /etc/init.d/ 
@@ -74,4 +76,4 @@ if [ $setup_run ] ; then
    echo "Please reboot your PirateBox now: "
    echo "   # reboot "
 fi
-echo "Done
+echo "Done"
