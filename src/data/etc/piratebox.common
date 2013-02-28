@@ -18,10 +18,27 @@ pb_pbimg="$pb_usbdir/pbIMG_ws.img"
 pb_pbmount="/opt/piratebox"
 # Backup Url for downloading Image
 pb_pb_srcImg_url="http://piratebox.aod-rpg.de/piratebox_ws_0.6_img.tar.gz"
-
+# switches resolv.conf to use local piratebox dns instead of any dns entry in config/network
+# should be switched to "no" only if you really knows what you are doing
+pb_use_local_dns="yes"
 
 #############################################################################
 # PirateBox helper functions
+
+pb_localdns_enable() {
+    if [ ! -e /tmp/resolv.conf.old ] ; then
+        mv  /tmp/resolv.conf    /tmp/resolv.conf.old 
+    fi
+    echo "nameserver 127.0.0.1" > /tmp/resolv.conf
+}
+
+pb_localdns_disable() {
+    if [ -e /tmp/resolv.conf.old ] ; then
+       mv  /tmp/resolv.conf.old    /tmp/resolv.conf
+    fi
+}
+
+
 
 pb_nodns() {
   # disable local DNS per dnsmasq
@@ -294,16 +311,16 @@ pb_needextimg() {
       echo "       DO NOT overwrite the file!"
       echo " "
       echo " Do you want to reinitiate your USB and "
-      echo " overwrite the file? ( y / n) "
+      echo -n " overwrite the file? ( y / n) "
       read answer
 
       if [ "$answer" = "n" ]  ; then
         echo "${initscript}: Skipping further USB prepare-steps"
-        return false
+        return 1
       fi
   fi
 
-  return true
+  return 0
 }
 
 pb_mkextimg() {
@@ -446,11 +463,18 @@ pb_start() {
   export PATH=$PATH:/usr/local/bin
   export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 
+   if [ "$pb_use_local_dns" = "yes" ] ; then
+       pb_localdns_enable 
+   fi
+
   mkdir -p $pb_share    
   $pb_pbmount/init.d/piratebox_router start
 }
 
 pb_stop() {
+   #works with file check
+   pb_localdns_disable 
+   
   # killing all piratebox processes
   $pb_pbmount/init.d/piratebox_router stop
 
