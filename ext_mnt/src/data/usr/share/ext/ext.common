@@ -4,33 +4,33 @@
 
 
 ext_init() {
-      pb_usbwait
-      pb_usbconfig
+      ext_usbwait
+      ext_usbconfig
       
   echo "${initscript}: Mounting external USB storage..."
 
-  pb_mount usb
-  [ -d "$pb_usbdir" ] || mkdir -p "$pb_usbdir"
+  ext_mount usb
+  [ -d "$ext_usbdir" ] || mkdir -p "$ext_usbdir"
 
 
-  if pb_needswap
+  if ext_needswap
   then
     echo "${initscript}: Creating swapspace..."
-    pb_mkswap
+    ext_mkswap
   fi
 
-  if pb_needextimg
+  if ext_needextimg
   then
     echo "${initscript}: Creating ext loop image..."
-    pb_mkextimg
+    ext_mkextimg
   fi
       
 }
 
 
-pb_usbwait() {
+ext_usbwait() {
   # wait for USB device to show up
-  if [ ! -e "$pb_usbdevice" ]
+  if [ ! -e "$ext_usbdevice" ]
   then
 		#TODO describe what kind of disc is expeected
     echo "Please connect USB disk. If it is already plugged-in,"
@@ -38,7 +38,7 @@ pb_usbwait() {
     echo "reconnect the device. Keep in mind that your router's"
     echo "ports may not be able to supply enough power to"
     echo "spin-up a USB HDD."
-    while [ ! -e "$pb_usbdevice" ]
+    while [ ! -e "$ext_usbdevice" ]
     do
       sleep 1
       echo -n "."
@@ -48,12 +48,12 @@ pb_usbwait() {
   fi
 }
 
-pb_usbconfig() {
+ext_usbconfig() {
   # prepare USB disk for mounting
-  [ -d "$pb_usbmount" ] || mkdir -p "$pb_usbmount"
-  pb_uciset fstab piratebox mount \
-    target=$pb_usbmount \
-    device=$pb_usbdevice \
+  [ -d "$ext_usbmount" ] || mkdir -p "$ext_usbmount"
+  ext_uciset fstab piratebox mount \
+    target=$ext_usbmount \
+    device=$ext_usbdevice \
     fstype=vfat \
     options=rw,sync,umask=0 \
     enabled_fsck=0 \
@@ -62,71 +62,71 @@ pb_usbconfig() {
 }
 
 
-pb_needswap() {
-  [ ! -e "$pb_swapimg" ]
+ext_needswap() {
+  [ ! -e "$ext_swapimg" ]
 }
 
-pb_mkswap() {
-  pb_umount swap
-  pb_mount usb
-  [ -d "$(dirname $pb_swapimg)" ] || mkdir -p "$(dirname $pb_swapimg)"
+ext_mkswap() {
+  ext_umount swap
+  ext_mount usb
+  [ -d "$(dirname $ext_swapimg)" ] || mkdir -p "$(dirname $ext_swapimg)"
   # create a swap file
-  dd if=/dev/zero of="$pb_swapimg" bs=1M count=32
-  mkswap "$pb_swapimg"
-  pb_uciset fstab swap pirateswap \
-    device=$pb_swapimg \
+  dd if=/dev/zero of="$ext_swapimg" bs=1M count=32
+  mkswap "$ext_swapimg"
+  ext_uciset fstab swap pirateswap \
+    device=$ext_swapimg \
     enabled=1
 }
 
 
-pb_mount() {
+ext_mount() {
   parts=$*
   [ "$parts" == "-a" ] && parts="usb ext swap"
   for part in $*
   do
     case $part in
       usb)
-	  pb_ismounted "$pb_usbmount" && continue
-	  [ -d "$pb_usbmount" ] || mkdir -p "$pb_usbmount"
-          if ! mount -o umask=0,noatime,rw "$pb_usbdevice" "$pb_usbmount"
+	  ext_ismounted "$ext_usbmount" && continue
+	  [ -d "$ext_usbmount" ] || mkdir -p "$ext_usbmount"
+          if ! mount -o umask=0,noatime,rw "$ext_usbdevice" "$ext_usbmount"
           then
             echo "${initscript}: ERROR: unable to mount USB storage" >&2
             exit 5
           fi
           ;;
       ext)
-	  pb_ismounted "$pb_extmount" && continue
-	  pb_mount usb
-	  [ -d "$pb_extmount" ] || mkdir -p "$pb_extmount"
-          if ! mount -o loop,rw,sync "$pb_extimg" "$pb_extmount"
+	  ext_ismounted "$ext_mountpoint" && continue
+	  ext_mount usb
+	  [ -d "$ext_mountpoint" ] || mkdir -p "$ext_mountpoint"
+          if ! mount -o loop,rw,sync "$ext_img" "$ext_mountpoint"
           then
             echo "${initscript}: ERROR: unable to mount ext image" >&2
             exit 5
           fi
           ;;
       swap)
-	  pb_mount usb
-          swapon "$pb_swapimg" &>/dev/null
+	  ext_mount usb
+          swapon "$ext_swapimg" &>/dev/null
           ;;
     esac
   done
 }
 
-pb_ismounted() {
+ext_ismounted() {
   mount | grep "on $1 " >/dev/null
 }
 
 
-pb_umount() {
+ext_umount() {
   parts=$*
   [ "$parts" == "-a" ] && parts="swap ext usb"
   for part in $*
   do
     case $part in
       usb)
-	  pb_ismounted "$pb_usbmount" || continue
-          pb_umount swap  ext
-          if ! umount "$pb_usbmount"
+	  ext_ismounted "$ext_usbmount" || continue
+          ext_umount swap  ext
+          if ! umount "$ext_usbmount"
           then
             echo "${initscript}: WARNING: unable to umount USB storage" >&2
 	    return 255
@@ -135,29 +135,29 @@ pb_umount() {
       ext)
           # losetup -d here just in case user umounted manually
           losetup -d /dev/loop0 &>/dev/null
-	  pb_ismounted "$pb_extmount" || continue
-          if ! umount "$pb_extmount"
+	  ext_ismounted "$ext_mountpoint" || continue
+          if ! umount "$ext_mountpoint"
           then
 	  
-	    echo "can't umount $pb_extmount ..exiting "
+	    echo "can't umount $ext_mountpoint ..exiting "
 	    return 255 
 	   fi
           losetup -d /dev/loop0
           ;;
        swap)
           #TODO: error handling
-          swapoff "$pb_swapimg" &>/dev/null
+          swapoff "$ext_swapimg" &>/dev/null
           ;;
     esac
   done
 }
 
 
-pb_uciset() {
+ext_uciset() {
   local config=$1 ; shift
   local section=$1 ; shift
   local type=$1 ; shift
-  pb_uciadd $config $section $type
+  ext_uciadd $config $section $type
   for opt in "$@"
   do
     uci set "$config.$section.$opt"
@@ -166,15 +166,22 @@ pb_uciset() {
 }
 
 
-pb_needextimg() {
-  # [ ! -e "$pb_extimg" ]
-  # always re-create ext image because of opkg woes
-
-  if [ -e $pb_extimg ] ; then
+ext_needextimg() {
+  # Config-Files for non-interactive install
+  if [ -e $ext_force_overwrite_ext ] ; then
+      return 0
+  else 
+      if [ -e $ext_force_ext_ignore ] ; then
+         return 1
+      fi
+  fi 
+ 
+  #ask if interactive
+  if [ -e $ext_img ] ; then
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       echo "@@              Caution                   @@"
       echo "@@  It seems there is already the file    @@"
-      echo "@@  $pb_extimg "
+      echo "@@  $ext_img  "
       echo "@@  on your USB Stick                     @@"
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       echo " "
@@ -186,30 +193,38 @@ pb_needextimg() {
       echo "       DO NOT overwrite the file!"
       echo " "
       echo " Do you want to reinitiate your USB and "
-      echo " overwrite the file? ( y / n) "
+      echo  -n " overwrite the file? ( y / n) "
       read answer
 
       if [ "$answer" = "n" ]  ; then
         echo "${initscript}: Skipping further USB prepare-steps"
-        return false
+        return 1
       fi
   fi
 
-  return true
+  return 0
 }
 
-pb_mkextimg() {
-  pb_umount ext
-  pb_mount usb
-  [ -d "$(dirname $pb_extimg)" ] || mkdir -p "$(dirname $pb_extimg)"
+ext_mkextimg() {
+  ext_umount ext
+  ext_mount usb
+  [ -d "$(dirname $ext_img)" ] || mkdir -p "$(dirname $ext_img)"
 
-  #TODO Download it out of the net to reduce packet-size
-  gzip -dc /usr/share/piratebox/OpenWRT.img.gz >"$pb_extimg"
-  [ -d "$pb_extmount" ] || mkdir -p "$pb_extmount"
+   if [ ! -e $ext_img_src ] ; then
+      echo "No external Image-template file found... loading from Internet"
+      wget -O $ext_img_src  $ext_img_src_url
+      if [ ! -e $ext_img_src ] ; then
+         echo "wget failed... cancel"
+	 exit 5
+      fi
+   fi
+   gzip -dc  "$ext_img_src" > "$ext_img" 
+   
+   [ -d "$ext_mountpoint" ] || mkdir -p "$ext_mountpoint"
 
-  pb_uciset fstab piratebox mount \
-    target=$pb_extmount \
-    device=$pb_extimg \
+  ext_uciset fstab piratebox mount \
+    target=$ext_mountpoint \
+    device=$ext_img \
     options=loop \
     enabled=1
 }
@@ -218,30 +233,29 @@ ext_fix_path() {
 
     echo "Including the external mountpoint to system"
     # link ext usr to /usr/local
-  [ -L  $ext_linktarget ] || ln -sf "$pb_extmount/usr" $ext_linktarget
+  [ -L  $ext_linktarget ] || ln -sf "$ext_mountpoint/usr" $ext_linktarget
 
   # fix for ext packages not installing to usr
-  [ -d "$pb_extmount/usr/lib" ] || mkdir -p "$pb_extmount/usr/lib"
-  [ -L  "$pb_extmount/lib" ] || ln -sf "$pb_extmount/usr/lib" "$pb_extmount/lib"
+  [ -d "$ext_mountpoint/usr/lib" ] || mkdir -p "$ext_mountpoint/usr/lib"
+  [ -L  "$ext_mountpoint/lib" ] || ln -sf "$ext_mountpoint/usr/lib" "$ext_mountpoint/lib"
 
    #make the new paths default active in /etc/profile
    # But only it isn't already there
-   grep "ENH_PATH"  >> /dev/null
-   if [ "$?" = "1" ]  ; then
-
-      echo \"ENH_PATH="$ext_linktarget/bin:$ext_linktarget/sbin/;$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
+   if [  grep "ENH_PATH"  /etc/profile >> /dev/null ]  ; then
+      echo "ENH_PATH=\"$ext_linktarget/bin:$ext_linktarget/sbin/;$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
       echo "PATH=\"$PATH:$ENH_PATH\"" >> /etc/profile
     fi
    
-   #TODO enhance ldconfig path
-   
-
+    if [ grep "ENH_LIB"  /etc/profile >> /dev/null ] ; then
+       echo "ENH_LIB=\"$ext_mountpoint/lib:$ext_mountpoint/usr/lib\""  >> /etc/profile 
+       echo "LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH:$ENH_LIB\"" >> /etc/profile
+    fi
 }
 
 ext_enhance_opkg() {
 
   # prepare opkg for /usr/local
-  grep "^dest piratebox" /etc/opkg.conf \
-      || echo "dest piratebox $pb_extmount" >>/etc/opkg.conf
+  grep "^dest ext1" /etc/opkg.conf \
+      || echo "dest ext1 $ext_mountpoint" >>/etc/opkg.conf
 
 }

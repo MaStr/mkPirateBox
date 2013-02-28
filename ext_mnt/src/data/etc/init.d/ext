@@ -6,7 +6,7 @@ STOP=20
 EXTRA_COMMANDS="init"
 EXTRA_HELP="	init	    Mount USB and install ext_mnt + flash on a fresh USB disk"
 
-. /etc/ext_mnt.common
+. /usr/share/ext/ext.common
 
 init() {
   ext_init
