@@ -24,7 +24,9 @@ ext_init() {
     echo "${initscript}: Creating ext loop image..."
     ext_mkextimg
   fi
-      
+    
+   ext_fix_path
+   ext_enhance_opkg
 }
 
 
@@ -152,6 +154,16 @@ ext_umount() {
   done
 }
 
+ext_uciadd() {
+  local config=$1 ; shift
+  local section=$1 ; shift
+  local type=$1 ; shift
+  [ -e "/etc/config/$config" ] || touch "/etc/config/$config"
+  uci show "$config.$section" &>/dev/null \
+    || uci add "$config $section" &>/dev/null
+  uci set "$config.$section=$type"
+}
+
 
 ext_uciset() {
   local config=$1 ; shift
@@ -168,10 +180,12 @@ ext_uciset() {
 
 ext_needextimg() {
   # Config-Files for non-interactive install
-  if [ -e $ext_force_overwrite_ext ] ; then
+  if [ -e $ext_force_ext_overwrite ] ; then
+      echo "Forcing overwrite of $ext_img if it already exsits"
       return 0
   else 
       if [ -e $ext_force_ext_ignore ] ; then
+	 echo "Forcing  to NOT overwrite of $ext_img if it already exsits"
          return 1
       fi
   fi 
@@ -233,22 +247,23 @@ ext_fix_path() {
 
     echo "Including the external mountpoint to system"
     # link ext usr to /usr/local
-  [ -L  $ext_linktarget ] || ln -sf "$ext_mountpoint/usr" $ext_linktarget
+  [ -L  $ext_linktarget ] || ln -sf "$ext_mountpoint" $ext_linktarget
 
   # fix for ext packages not installing to usr
-  [ -d "$ext_mountpoint/usr/lib" ] || mkdir -p "$ext_mountpoint/usr/lib"
-  [ -L  "$ext_mountpoint/lib" ] || ln -sf "$ext_mountpoint/usr/lib" "$ext_mountpoint/lib"
+  #[ -d "$ext_mountpoint/usr/lib" ] || mkdir -p "$ext_mountpoint/usr/lib"
+  [# -L  "$ext_mountpoint/lib" ] || ln -sf "$ext_mountpoint/usr/lib" "$ext_mountpoint/lib"
+  
 
    #make the new paths default active in /etc/profile
    # But only it isn't already there
-   if [  grep "ENH_PATH"  /etc/profile >> /dev/null ]  ; then
-      echo "ENH_PATH=\"$ext_linktarget/bin:$ext_linktarget/sbin/;$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
-      echo "PATH=\"$PATH:$ENH_PATH\"" >> /etc/profile
+   if [  ! `grep "ENH_PATH"  /etc/profile >> /dev/null `]  ; then
+      echo "ENH_PATH=\"$ext_linktarget/bin:$ext_linktarget/sbin/:$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
+      echo "export PATH=\"\$PATH:\$ENH_PATH\"" >> /etc/profile
     fi
    
-    if [ grep "ENH_LIB"  /etc/profile >> /dev/null ] ; then
+    if [ ! `grep "ENH_LIB"  /etc/profile >> /dev/null `] ; then
        echo "ENH_LIB=\"$ext_mountpoint/lib:$ext_mountpoint/usr/lib\""  >> /etc/profile 
-       echo "LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH:$ENH_LIB\"" >> /etc/profile
+       echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:\$ENH_LIB\"" >> /etc/profile
     fi
 }
 
