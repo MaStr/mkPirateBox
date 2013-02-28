@@ -1,8 +1,8 @@
 #!/bin/sh /etc/rc.common
 
 NAME=ext_mnt
-START=80                #TODO
-STOP=20
+START=40               #39 = usb
+STOP=79
 EXTRA_COMMANDS="init"
 EXTRA_HELP="	init	    Mount USB and install ext_mnt + flash on a fresh USB disk"
 
