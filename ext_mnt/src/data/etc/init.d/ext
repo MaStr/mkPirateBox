@@ -13,17 +13,17 @@ init() {
 }
 
 start() {
-  pb_mount usb
+  ext_mount usb
   # init if we have a fresh USB disk
-  if [ ! -d "$pb_usbdir" ]
+  if [ ! -d "$ext_usbdir" ]
   then
       echo "WARNING: empty USB disc found. no mount done"
       exit 9
   fi
-  pb_mount usb swap ext
+  ext_mount usb swap ext
 }
 
 stop() {
-  pb_stop
+  ext_stop
 }
 

@@ -27,6 +27,10 @@ ext_init() {
     
    ext_fix_path
    ext_enhance_opkg
+   
+   echo "If you run this during an install or run the init the first time"
+   echo " please run "
+   echo "    source /etc/profile "
 }
 
 
@@ -53,7 +57,7 @@ ext_usbwait() {
 ext_usbconfig() {
   # prepare USB disk for mounting
   [ -d "$ext_usbmount" ] || mkdir -p "$ext_usbmount"
-  ext_uciset fstab piratebox mount \
+  ext_uciset fstab ext1  mount \
     target=$ext_usbmount \
     device=$ext_usbdevice \
     fstype=vfat \
@@ -251,17 +255,19 @@ ext_fix_path() {
 
   # fix for ext packages not installing to usr
   #[ -d "$ext_mountpoint/usr/lib" ] || mkdir -p "$ext_mountpoint/usr/lib"
-  [# -L  "$ext_mountpoint/lib" ] || ln -sf "$ext_mountpoint/usr/lib" "$ext_mountpoint/lib"
+  # [-L  "$ext_mountpoint/lib" ] || ln -sf "$ext_mountpoint/usr/lib" "$ext_mountpoint/lib"
   
 
    #make the new paths default active in /etc/profile
    # But only it isn't already there
-   if [  ! `grep "ENH_PATH"  /etc/profile >> /dev/null `]  ; then
+   if   !  grep -q "ENH_PATH"  /etc/profile    ; then
+      echo "Fixing PATH"
       echo "ENH_PATH=\"$ext_linktarget/bin:$ext_linktarget/sbin/:$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
       echo "export PATH=\"\$PATH:\$ENH_PATH\"" >> /etc/profile
     fi
    
-    if [ ! `grep "ENH_LIB"  /etc/profile >> /dev/null `] ; then
+    if  !  grep -q "ENH_LIB"  /etc/profile  ; then
+       echo "Fixing LD_LIBRARY_PATH"
        echo "ENH_LIB=\"$ext_mountpoint/lib:$ext_mountpoint/usr/lib\""  >> /etc/profile 
        echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:\$ENH_LIB\"" >> /etc/profile
     fi

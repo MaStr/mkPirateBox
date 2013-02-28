@@ -1,5 +1,5 @@
 NAME = extendRoot
-VERSION = 0.0.5
+VERSION = 0.0.10
 
 ARCH = all
 IPK = $(NAME)_$(VERSION)_$(ARCH).ipk
