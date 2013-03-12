@@ -66,6 +66,9 @@ wifi
 # start PirateBox service
 /etc/init.d/piratebox start
 
+#Disable DNS switch done by piratebox start to get working dns resolution again
+/etc/init.d/piratebox nodns
+
 # give some user feedback
 echo
 echo "PirateBox wireless SSID: $pb_wireless_ssid"
