@@ -1,13 +1,10 @@
 #############################################################################
 # PirateBox helper functions
 
-#load ext config
-
-. /etc/ext.config
+. /etc/piratebox.config
 
 
 pb_setup() {
-
 
   pb_netconfig 
   
@@ -99,7 +96,7 @@ pb_netconfig() {
   
   work_hostname="$pb_hostname"
   if [  -e $pb_inst_flag_mesh ] ; then
-       echo "Mesh package detected, generating random hostname"
+       echo "${initscript}: Mesh package detected, generating random hostname"
        pb_generateHostname    
        work_hostname="$pb_random_hostname"
   fi
@@ -119,7 +116,6 @@ pb_netconfig() {
    fi 
 
   uci set "network.lan.ipaddr=$pb_ip"
-  uci set "network.lan.ipaddr=$pb_ip"
   uci set "network.lan.proto=static"
   #CAVE: wireless config might be platform specific
   uci set "wireless.radio0.disabled=0"
@@ -137,31 +133,25 @@ pb_undoconfig() {
   # undo config changes
   uci delete dhcp.piratebox
   uci delete firewall.piratebox
-  uci delete fstab.piratebox
-  uci delete fstab.pirateswap
   uci delete fstab.pirateimage
   uci set "system.@system[0].hostname=OpenWRT"
   uci set "network.lan.ipaddr=192.168.1.1"
   uci commit
-  cp /rom/etc/opkg.conf /etc/
   cp /rom/etc/hosts /etc/
   cp /rom/etc/init.d/dnsmasq /etc/init.d/
-  rm /usr/local
   [ -d "$pb_usbmount" ] && rmdir "$pb_usbmount"
-  [ -d "$pb_extmount" ] && rmdir "$pb_extmount"
   [ -d "$pb_pbmount"  ] && rmdir "$pb_pbmount"
 }
 
 
 pb_mkpbimg () {
    pb_umount pb
-   pb_mount usb
    [ -d "$(dirname $pb_pbimg)" ] || mkdir -p "$(dirname $pb_pbimg)"
    if [ ! -e $pb_pb_srcImg ] ; then
-      echo "No PirateBox Image file found... loading from Internet"
+      echo "${initscript}: No PirateBox Image file found... loading from Internet"
       wget -O $pb_pb_srcImg  $pb_pb_srcImg_url 
       if [ $?  -ne 0 ] ; then
-         echo "wget failed... cancel"
+         echo "${initscript}: ERROR: wget failed... cancel"
 	 #remove a possible defect file
 	 rm -f $pb_pb_srcImg
 	 exit 5
@@ -186,15 +176,14 @@ pb_init() {
 
 #Removes current image file and overwrite it with new one
 pb_updatePBImage () {
-    echo "Unmounting $pb_pbmount"
+    echo "${initscript}: Unmounting $pb_pbmount"
     pb_umount pb  
-    echo "Mount usb"
-    pb_mount usb
-    echo "Removing old image file"
-    rm  $pb_pbimg
-    echo "Create new Image file"
+    [ ! -d "$pb_usbdir" ] && ( echo "${initscript}: ERROR: Seems the USB Stick ist not available" && exit 99 )         
+    echo "${initscript}: Removing old image file if exists"
+    rm  -f $pb_pbimg
+    echo "${initscript}: Create new Image file"
     pb_mkpbimg 
-    echo "Done"
+    echo "${initscript}: Done"
 }
 
 

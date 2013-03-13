@@ -1,0 +1,51 @@
+#!/bin/sh /etc/rc.common
+
+NAME=piratebox
+START=80
+STOP=20
+EXTRA_COMMANDS="setup init nodns updatePB mountPB"
+EXTRA_HELP="	setup	Activate current USB and network configuration
+	init	Mount USB, and PirateBoxify a fresh USB disk
+     updatePB  Updates only PirateBox files from USB stick Image-File
+	nodns	Disable local DNS redirection through dnsmasq"
+
+
+# include PirateBox shared functionality
+###  at this case, I assume it is installed in /usr/local as opkg destination
+. /usr/local/usr/shared/piratebox/piratebox.common
+
+setup() {
+  pb_netconfig
+}
+
+init() {
+  pb_init
+}
+
+
+nodns() {
+  pb_nodns
+}
+
+updatePB () {
+  pb_updatePBImage
+}
+
+mountPB () {
+   pb_mount pb
+}
+
+start() {
+  if [ ! -d "$pb_usbdir" ]
+  then
+	echo "It seems PirateBox was not initialized correctly"
+	echo " or the USB stick is not mounted"
+	exit 99
+  fi
+  pb_start 
+}
+
+stop() {
+  pb_stop
+}
+

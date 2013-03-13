@@ -26,7 +26,7 @@ ext_init() {
    ext_fix_path
    ext_enhance_opkg
    
-   echo "Enable for startup"
+   echo "${initscript}: Enable for startup"
    /etc/init.d/ext enable
    
    echo "If you run this during an install or run the init the first time"
@@ -146,7 +146,7 @@ ext_umount() {
           if ! umount "$ext_mountpoint"
           then
 	  
-	    echo "can't umount $ext_mountpoint ..exiting "
+	    echo "ERROR: can't umount $ext_mountpoint ..exiting "
 	    return 255 
 	   fi
           losetup -d /dev/loop0
@@ -186,11 +186,11 @@ ext_uciset() {
 ext_needextimg() {
   # Config-Files for non-interactive install
   if [ -e $ext_force_ext_overwrite ] ; then
-      echo "Forcing overwrite of $ext_img if it already exsits"
+      echo "${initscript}: Forcing overwrite of $ext_img if it already exsits"
       return 0
   else 
       if [ -e $ext_force_ext_ignore ] ; then
-	 echo "Forcing  to NOT overwrite of $ext_img if it already exsits"
+	 echo "${initscript}: Forcing  to NOT overwrite of $ext_img if it already exsits"
          return 1
       fi
   fi 
@@ -230,10 +230,10 @@ ext_mkextimg() {
   [ -d "$(dirname $ext_img)" ] || mkdir -p "$(dirname $ext_img)"
 
    if [ ! -e $ext_img_src ] ; then
-      echo "No external Image-template file found... loading from Internet"
+      echo "${initscript}: No external Image-template file found... loading from Internet"
       wget -O $ext_img_src  $ext_img_src_url
       if [ $? -ne 0 ] ; then
-         echo "wget failed... cancel"
+         echo "${initscript}: ERROR: wget failed... cancel"
 	 #remove wrong file
 	 rm -f $ext_img_src
 	 exit 5
@@ -252,7 +252,7 @@ ext_mkextimg() {
 
 ext_fix_path() {
 
-    echo "Including the external mountpoint to system"
+    echo "${initscript}: Including the external mountpoint to system"
     # link ext usr to /usr/local
   [ -L  $ext_linktarget ] || ln -sf "$ext_mountpoint" $ext_linktarget
 
@@ -264,13 +264,13 @@ ext_fix_path() {
    #make the new paths default active in /etc/profile
    # But only it isn't already there
    if   !  grep -q "ENH_PATH"  /etc/profile    ; then
-      echo "Fixing PATH"
+      echo "${initscript}: "
       echo "ENH_PATH=\"$ext_linktarget/bin:$ext_linktarget/sbin/:$ext_linktarget/usr/bin:$ext_linktarget/usr/sbin\"" >> /etc/profile
       echo "export PATH=\"\$PATH:\$ENH_PATH\"" >> /etc/profile
     fi
    
     if  !  grep -q "ENH_LIB"  /etc/profile  ; then
-       echo "Fixing LD_LIBRARY_PATH"
+       echo "${initscript}: Fixing LD_LIBRARY_PATH"
        echo "ENH_LIB=\"$ext_mountpoint/lib:$ext_mountpoint/usr/lib\""  >> /etc/profile 
        echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:\$ENH_LIB\"" >> /etc/profile
     fi
@@ -282,4 +282,15 @@ ext_enhance_opkg() {
   grep "^dest ext1" /etc/opkg.conf \
       || echo "dest ext1 $ext_mountpoint" >>/etc/opkg.conf
 
+}
+
+
+pb_undoconfig() {
+  # undo config changes
+  uci delete fstab.piratebox
+  uci delete fstab.pirateswap
+  uci commit
+  cp /rom/etc/opkg.conf /etc/
+  rm /usr/local
+  [ -d "$ext_mountpoint" ] && rmdir "$ext_mountpoint"
 }
