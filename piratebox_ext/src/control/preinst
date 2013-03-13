@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#Disable Piratebox, it it seems that it is installed
+if [ -d /opt/piratebox ] ; then
+   /etc/init.d/piratebox stop
+fi
+
+exit 0

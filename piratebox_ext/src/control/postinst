@@ -36,10 +36,6 @@ if [ -e /etc/init.d/dnsmasq ] ; then
 fi
 
 
-#Disable Piratebox, it it seems that it is installed
-if [ -d /opt/piratebox ] ; then
-   /etc/init.d/piratebox stop
-fi
 
 ##only do network config etc, when first install
 setup_run=0
