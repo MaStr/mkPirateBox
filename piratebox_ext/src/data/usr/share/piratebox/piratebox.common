@@ -1,9 +1,9 @@
 #############################################################################
 # PirateBox helper functions
 
-#load ext_mnt config
+#load ext config
 
-. /etc/ext_mnt.config
+. /etc/ext.config
 
 
 pb_setup() {
@@ -199,9 +199,7 @@ pb_updatePBImage () {
 pb_start() {
   pb_mount pb
 
-  export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
-
-  mkdir -p $pb_share    
+mkdir -p $pb_share    
   $pb_pbmount/init.d/piratebox_router start
 }
 

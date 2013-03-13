@@ -28,6 +28,9 @@ ext_init() {
    ext_fix_path
    ext_enhance_opkg
    
+   echo "Enable for startup"
+   /etc/init.d/ext enable
+   
    echo "If you run this during an install or run the init the first time"
    echo " please run "
    echo "    source /etc/profile "
