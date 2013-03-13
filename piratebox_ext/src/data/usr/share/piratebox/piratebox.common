@@ -22,6 +22,7 @@ pb_setup() {
   ln -s /usr/local/usr/sbin/lighttpd  /usr/sbin/lighttpd 
   ln -s /usr/local/usr/lib/lighttpd  /usr/lib/lighttpd 
 
+   touch $pb_inst_done
 }
 
 pb_nodns() {
@@ -194,13 +195,37 @@ pb_updatePBImage () {
     echo "${initscript}: Done"
 }
 
+#contains OpenWRT specific initialization, which was before 0.7 included in PirateBox scripts itself
+pb_init_image() {
+    $pb_pbmount/bin/hooks/hook_pre_openwrt_init.sh  "$pb_piratebox_conf" 
+
+
+    echo "-------------- Initialize PirateBoxScripts -----------"
+    rm -r $pb_pbmount/share
+    ln -sf $pb_usbdir $pb_pbmount/share
+    #chmod a+rw $CHATFILE  #should not be needed anymore
+
+    if [ -d $pb_usbdir/www_alt ] ; then
+          echo "----------------------------------------------------"
+          echo "####      Alternative www folder found          ####"
+          echo "####          $pb_www_alt                ####"
+          echo "####         switching directories              ####"
+          echo "----------------------------------------------------"
+	  $pb_pbmount/bin/exchange_www.sh $pb_piratebox_conf  "$pb_www_alt"
+ 
+    fi
+
+    touch $pb_flag_image_init_done
+}
 
 pb_start() {
   pb_mount pb
 
-mkdir -p $pb_share    
+   [ ! -f $pb_flag_image_init_done ] && pb_init_image 
+  mkdir -p $pb_share    
   $pb_pbmount/init.d/piratebox_router start
 }
+
 
 pb_stop() {
   # killing all piratebox processes

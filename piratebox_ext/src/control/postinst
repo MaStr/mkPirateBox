@@ -1,18 +1,14 @@
-#!/bin/ash
-
-# load ext_mnt config
-. /etc/ext_mnt.config
-
+#!/bin/sh
 
 
 ##------ Preparerations for /mnt/ext dependencies
 if [ ! -e /etc/init.d/piratebox ] ; then
-   ln  /usr/local/etc/init.d/piratebox /etc/init.d/ 
+   ln  ${IPKG_INSTROOT}/etc/init.d/piratebox /etc/init.d/ 
 fi
 
 # include PirateBox shared functionality
-. /usr/local/usr/share/piratebox/piratebox.common
-
+. ${IPKG_INSTROOT}/usr/share/piratebox/piratebox.common
+. ${IPKG_INSTROOT}/etc/piratebox.config
 
 
 # disable web interface, start PirateBox instead
@@ -50,20 +46,26 @@ setup_run=0
 if [ ! -e  $pb_inst_done ]  ; then
     # configure USB, network
      /etc/init.d/piratebox setup
+     [ $? -ne 0 ] && exit 99
+     
      setup_run=1
 fi
 
-
 # prepare USB partition and install PirateBox
 /etc/init.d/piratebox init
-/etc/init.d/piratebox update
-
+[ $? -ne 0 ] && exit 99
 
 # start PirateBox service
+/etc/init.d/piratebox enable 
 /etc/init.d/piratebox start
+ 
+ echo "Bringing PirateBox down again and leave image mounted"
+ echo " for further installation"
+ /etc/init.d/piratebox  stop_keep
+ 
+if [ $setup_run  -eq 1 ] ; then
 
-if [ $setup_run ] ; then
-   # give some user feedback
+# give some user feedback
    echo
    echo "PirateBox wireless SSID: $pb_wireless_ssid"
    echo "PirateBox DNS and hostname: $pb_hostname"
