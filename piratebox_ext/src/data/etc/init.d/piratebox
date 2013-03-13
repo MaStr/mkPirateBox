@@ -12,7 +12,13 @@ EXTRA_HELP="	setup	Activate current USB and network configuration
 
 # include PirateBox shared functionality
 ###  at this case, I assume it is installed in /usr/local as opkg destination
-. /usr/local/usr/shared/piratebox/piratebox.common
+
+if [ -e /etc/ext.config ]  then 
+  . /etc/ext.config
+  . $ext_linktarget/usr/shared/piratebox/piratebox.common
+else
+  . /usr/shared/piratebox/piratebox.common
+fi
 
 setup() {
   pb_netconfig
