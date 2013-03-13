@@ -160,8 +160,10 @@ pb_mkpbimg () {
    if [ ! -e $pb_pb_srcImg ] ; then
       echo "No PirateBox Image file found... loading from Internet"
       wget -O $pb_pb_srcImg  $pb_pb_srcImg_url 
-      if [ ! -e $pb_pb_srcImg ] ; then
+      if [ $?  -ne 0 ] ; then
          echo "wget failed... cancel"
+	 #remove a possible defect file
+	 rm -f $pb_pb_srcImg
 	 exit 5
       fi
    fi

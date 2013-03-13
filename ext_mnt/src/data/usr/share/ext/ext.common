@@ -1,5 +1,3 @@
-#!/bin/ash
-
 . /etc/ext.config 
 
 
@@ -234,8 +232,10 @@ ext_mkextimg() {
    if [ ! -e $ext_img_src ] ; then
       echo "No external Image-template file found... loading from Internet"
       wget -O $ext_img_src  $ext_img_src_url
-      if [ ! -e $ext_img_src ] ; then
+      if [ $? -ne 0 ] ; then
          echo "wget failed... cancel"
+	 #remove wrong file
+	 rm -f $ext_img_src
 	 exit 5
       fi
    fi
