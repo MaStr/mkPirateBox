@@ -1,7 +1,7 @@
 #############################################################################
 # PirateBox helper functions
 
-if [ -e /etc/ext.config ]  then 
+if [ -e /etc/ext.config ] ;  then 
   . /etc/ext.config
   . $ext_linktarget/etc/piratebox.config
 else
@@ -88,6 +88,19 @@ pb_uciadd() {
     || uci add "$config $section" &>/dev/null
   uci set "$config.$section=$type"
 }
+
+pb_uciset() {
+  local config=$1 ; shift
+  local section=$1 ; shift
+  local type=$1 ; shift
+  pb_uciadd $config $section $type
+  for opt in "$@"
+  do
+    uci set "$config.$section.$opt"
+  done
+  uci commit
+}
+
 
 
 #---------------------------------------------------------
